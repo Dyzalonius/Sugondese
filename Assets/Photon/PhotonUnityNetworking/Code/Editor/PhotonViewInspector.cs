@@ -113,8 +113,8 @@ namespace Photon.Pun
 
             if (this.m_Target.Synchronization != ViewSynchronization.Off && this.m_Target.ObservedComponents.FindAll(item => item != null).Count == 0)
             {
-				EditorGUILayout.HelpBox("Setting the synchronization option only makes sense if you observe something.", MessageType.Warning);
-			}
+                EditorGUILayout.HelpBox("Syncronization is enabled, but no " +typeof(IPunObservable).Name + " Components have been added to Observables List.", MessageType.Warning);
+            }
 
             GUI.color = Color.white;
             this.DrawObservedComponentsList();

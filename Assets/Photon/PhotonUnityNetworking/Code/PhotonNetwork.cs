@@ -64,7 +64,7 @@ namespace Photon.Pun
     public static partial class PhotonNetwork
     {
         /// <summary>Version number of PUN. Used in the AppVersion, which separates your playerbase in matchmaking.</summary>
-        public const string PunVersion = "2.18.1";
+        public const string PunVersion = "2.19.3";
 
         /// <summary>Version number of your game. Setting this updates the AppVersion, which separates your playerbase in matchmaking.</summary>
         /// <remarks>
@@ -1066,6 +1066,17 @@ namespace Photon.Pun
         ///  </remarks>
         public static bool ConnectUsingSettings()
         {
+            if (PhotonServerSettings == null)
+            {
+                Debug.LogError("Can't connect: Loading settings failed. ServerSettings asset must be in any 'Resources' folder as: " + ServerSettingsFileName);
+                return false;
+            }
+
+            return ConnectUsingSettings(PhotonServerSettings.AppSettings, PhotonServerSettings.StartInOfflineMode);
+        }
+
+        public static bool ConnectUsingSettings(AppSettings appSettings, bool startInOfflineMode = false) // parameter name hides static class member
+        {
             if (NetworkingClient.LoadBalancingPeer.PeerState != PeerStateValue.Disconnected)
             {
                 Debug.LogWarning("ConnectUsingSettings() failed. Can only connect while in state 'Disconnected'. Current state: " + NetworkingClient.LoadBalancingPeer.PeerState);
@@ -1085,23 +1096,17 @@ namespace Photon.Pun
             SetupLogging();
 
 
-            NetworkingClient.LoadBalancingPeer.TransportProtocol = PhotonServerSettings.AppSettings.Protocol;
-
-            #if UNITY_WEBGL
-            if (NetworkingClient.LoadBalancingPeer.TransportProtocol != ConnectionProtocol.WebSocket && NetworkingClient.LoadBalancingPeer.TransportProtocol != ConnectionProtocol.WebSocketSecure)
-            {
-                NetworkingClient.DebugReturn(DebugLevel.WARNING, "WebGL requires WebSockets. Switching TransportProtocol to WebSocketSecure.");
-                NetworkingClient.LoadBalancingPeer.TransportProtocol = ConnectionProtocol.WebSocketSecure;
-            }
-            #endif
+            NetworkingClient.LoadBalancingPeer.TransportProtocol = appSettings.Protocol;
+            NetworkingClient.EnableProtocolFallback = appSettings.EnableProtocolFallback;
 
 
             IsMessageQueueRunning = true;
-            NetworkingClient.AppId = PhotonServerSettings.AppSettings.AppIdRealtime;
-            GameVersion = PhotonServerSettings.AppSettings.AppVersion;
+            NetworkingClient.AppId = appSettings.AppIdRealtime;
+            GameVersion = appSettings.AppVersion;
 
 
-            if (PhotonServerSettings.StartInOfflineMode)
+
+            if (startInOfflineMode)
             {
                 OfflineMode = true;
                 return true;
@@ -1115,10 +1120,11 @@ namespace Photon.Pun
             }
 
 
-            NetworkingClient.EnableLobbyStatistics = PhotonNetwork.PhotonServerSettings.AppSettings.EnableLobbyStatistics;
+            NetworkingClient.EnableLobbyStatistics = appSettings.EnableLobbyStatistics;
+            NetworkingClient.ProxyServerAddress = appSettings.ProxyServer;
+            
 
-
-            if (PhotonServerSettings.AppSettings.IsMasterServerAddress)
+            if (appSettings.IsMasterServerAddress)
             {
                 NetworkingClient.SerializationProtocol = SerializationProtocol.GpBinaryV16;   // this is a workaround to use On Premises Servers, which don't support GpBinaryV18 yet.
                 if (AuthValues == null)
@@ -1129,20 +1135,23 @@ namespace Photon.Pun
                 {
                     AuthValues.UserId = Guid.NewGuid().ToString();
                 }
-                return ConnectToMaster(PhotonServerSettings.AppSettings.Server, PhotonServerSettings.AppSettings.Port, PhotonServerSettings.AppSettings.AppIdRealtime);
+                return ConnectToMaster(appSettings.Server, appSettings.Port, appSettings.AppIdRealtime);
             }
 
-			if (!PhotonServerSettings.AppSettings.IsDefaultNameServer)
+            
+            NetworkingClient.NameServerPortOverride = appSettings.Port;
+			if (!appSettings.IsDefaultNameServer)
             {
-                NetworkingClient.NameServerHost = PhotonServerSettings.AppSettings.Server;
+                NetworkingClient.NameServerHost = appSettings.Server;
             }
 
-            if (PhotonServerSettings.AppSettings.IsBestRegion)
+
+            if (appSettings.IsBestRegion)
             {
                 return ConnectToBestCloudServer();
             }
 
-            return ConnectToRegion(PhotonServerSettings.AppSettings.FixedRegion);
+            return ConnectToRegion(appSettings.FixedRegion);
         }
 
 
@@ -1836,7 +1845,7 @@ namespace Photon.Pun
                 return false;
             }
 
-            EnterRoomParams opParams = new EnterRoomParams();
+            EnterRoomParams opParams = new EnterRoomParams(); // the this.enterRoomParamsCache is updated in OpJoinRoom, so this method does not do it.
             opParams.RoomName = roomName;
             opParams.RejoinOnly = true;
             opParams.PlayerProperties = LocalPlayer.CustomProperties;
@@ -2484,18 +2493,19 @@ namespace Photon.Pun
                     parameters.viewIDs[i] = (sceneObject) ? AllocateViewID(0) : AllocateViewID(parameters.creator.ActorNumber);
                 }
 
-                photonViews[i].didAwake = false;
-                photonViews[i].ViewID = 0;
+                var view = photonViews[i];
 
-                photonViews[i].Prefix = parameters.objLevelPrefix;
-                photonViews[i].InstantiationId = parameters.viewIDs[0];
-                photonViews[i].isRuntimeInstantiated = true;
-                photonViews[i].InstantiationData = parameters.data;
+                view.didAwake = false;
+                view.ViewID = 0;
+                view.Prefix = parameters.objLevelPrefix;
+                view.InstantiationId = parameters.viewIDs[0];
+                view.isRuntimeInstantiated = true;
+                view.InstantiationData = parameters.data;
+                view.ownershipCacheIsValid = PhotonView.OwnershipCacheState.Invalid;
+                view.didAwake = true;
+                view.ViewID = parameters.viewIDs[i];    // with didAwake true and viewID == 0, this will also register the view
 
-                photonViews[i].didAwake = true;
-                photonViews[i].ViewID = parameters.viewIDs[i];    // with didAwake true and viewID == 0, this will also register the view
-
-                photonViews[i].Group = parameters.group;
+                view.Group = parameters.group;
             }
 
             if (localInstantiate)
@@ -3041,7 +3051,7 @@ namespace Photon.Pun
         /// <returns>The pun asset folder.</returns>
         public static string FindPunAssetFolder()
         {
-            string _thisPath =	FindAssetPath("PhotonClasses");
+            string _thisPath =	FindAssetPath("PunClasses");
             string _PunFolderPath = string.Empty;
 
             //Debug.Log("FindPunAssetFolder "+_thisPath);

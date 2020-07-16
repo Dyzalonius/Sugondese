@@ -57,6 +57,10 @@ namespace Photon.Pun
                 #if !PUN_2_OR_NEWER
                 AddScriptingDefineSymbolToAllBuildTargetGroups("PUN_2_OR_NEWER");
                 #endif
+
+                #if !PUN_2_19_OR_NEWER
+                AddScriptingDefineSymbolToAllBuildTargetGroups("PUN_2_19_OR_NEWER");
+                #endif
             }
         }
 

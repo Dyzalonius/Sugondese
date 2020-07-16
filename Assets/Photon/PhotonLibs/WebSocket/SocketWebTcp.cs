@@ -100,7 +100,7 @@ namespace ExitGames.Client.Photon
             MonoBehaviour mb = this.websocketConnectionObject.AddComponent<MonoBehaviourExt>();
             this.websocketConnectionObject.hideFlags = HideFlags.HideInHierarchy;
             UnityEngine.Object.DontDestroyOnLoad(this.websocketConnectionObject);
-            this.sock = new WebSocket(new Uri(this.ServerAddress), this.SerializationProtocol);
+            this.sock = new WebSocket(new Uri(this.ConnectAddress), this.SerializationProtocol);
             this.sock.Connect();
 
             mb.StartCoroutine(this.ReceiveLoop());
@@ -203,6 +203,7 @@ namespace ExitGames.Client.Photon
                     yield return new WaitForRealSeconds(0.1f);
                 }
 
+
                 if (this.sock != null)
                 {
                     if (this.sock.Error != null)
@@ -219,6 +220,8 @@ namespace ExitGames.Client.Photon
                         }
 
                         this.State = PhotonSocketState.Connected;
+                        this.peerBase.OnConnect();
+
                         while (this.State == PhotonSocketState.Connected)
                         {
                             if (this.sock != null)

@@ -2,6 +2,7 @@
 Photon Chat C# Client - Changelog
 Exit Games GmbH - www.photonengine.com - forum.photonengine.com
 
+
 Version 4.1.2.20
     Changed: ChatDisconnectCause enum and OnDisconnected callback usage updated to be in sync. with Realtime.
     Added: ChatClient.ConnectUsingSettings(ChatAppSettings appSettings).
