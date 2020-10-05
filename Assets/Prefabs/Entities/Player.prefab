@@ -93,13 +93,15 @@ GameObject:
   - component: {fileID: 7180991349010121852}
   - component: {fileID: 1592940853}
   - component: {fileID: 1592940852}
+  - component: {fileID: -4053411204395208778}
+  - component: {fileID: 8486637478667007739}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7180991349010121855
 Transform:
   m_ObjectHideFlags: 0
@@ -122,12 +124,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7180991349010121854}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3467fc906acf8134f93dfd6c163eac0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   movementSpeed: 15
+  prefabBall: {fileID: 0}
 --- !u!50 &1592940853
 Rigidbody2D:
   serializedVersion: 4
@@ -175,3 +178,40 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.8, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &-4053411204395208778
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7180991349010121854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 555f1ad6f65ef5b4f80e1588b660c3da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  synchronizePosition: 1
+  synchronizeRotation: 0
+  synchronizeScale: 0
+--- !u!114 &8486637478667007739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7180991349010121854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 1
+  ObservedComponents:
+  - {fileID: -4053411204395208778}
+  viewIdField: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0

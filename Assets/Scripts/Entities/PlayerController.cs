@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using Dyzalonius.Sugondese.Networking;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,9 +6,6 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField]
     private float movementSpeed = 15f; // in km/h
-
-    [SerializeField]
-    private GameObject prefabBall = null;
 
     private Vector3 inputMovement;
     private Vector3 inputAim;
@@ -95,13 +92,8 @@ public class PlayerController : MonoBehaviour
 
     private void ThrowBall()
     {
-        if (balls.Count > 0)
-        {
-            Ball ball = balls[0];
-            balls.RemoveAt(0);
+        Ball ball = NetworkingService.Instance.Instantiate("Ball", transform.position, Quaternion.identity).GetComponent<Ball>();
 
-            ball = Instantiate(prefabBall, transform.position, Quaternion.identity).GetComponent<Ball>();
-            ball.Throw(inputAim, this);
-        }
+        ball.Throw(inputAim, this);
     }
 }

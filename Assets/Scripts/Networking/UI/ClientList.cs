@@ -1,5 +1,4 @@
 ﻿using Photon.Pun;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,21 +16,30 @@ public class ClientList : MonoBehaviour
         for (int i = players.Count - 1; i >= 0; i--)
         {
             if (!PhotonNetwork.CurrentRoom.Players.ContainsValue(players[i]))
+            {
                 RemoveClientItem(players[i]);
+            }
         }
 
         // Add new ones
         foreach (var pair in PhotonNetwork.CurrentRoom.Players)
         {
             if (!players.Contains(pair.Value))
+            {
                 AddClientItem(pair.Value);
+            }
+        }
+
+        // Update all clientItems
+        foreach (var pair in clientItems)
+        {
+            pair.Value.Setup(pair.Key);
         }
     }
 
     private void AddClientItem(Photon.Realtime.Player player)
     {
         ClientItem newClientItem = Instantiate(clientItemPrefab, transform).GetComponent<ClientItem>();
-        newClientItem.Setup(player);
         players.Add(player);
         clientItems.Add(player, newClientItem);
     }
@@ -40,11 +48,7 @@ public class ClientList : MonoBehaviour
     {
         ClientItem clientItem = clientItems[player];
         clientItems.Remove(player);
-        Destroy(clientItem);
-    }
-
-    public ClientItem GetClientItem(Photon.Realtime.Player player)
-    {
-        return clientItems[player];
+        players.Remove(player);
+        Destroy(clientItem.gameObject);
     }
 }

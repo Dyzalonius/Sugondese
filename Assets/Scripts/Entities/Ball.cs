@@ -19,11 +19,6 @@ public class Ball : MonoBehaviour
         CanBePickedUp = true;
     }
 
-    private void Update()
-    {
-        // Check if ball bounces of a wall
-    }
-
     private void FixedUpdate()
     {
         // Calculate speed in meters per fixed delta time
