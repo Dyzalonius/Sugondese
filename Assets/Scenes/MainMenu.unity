@@ -3061,8 +3061,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   prefabsNetworkedObjects:
-  - {fileID: 2888478200402387263, guid: ce8be936b46ad1747af8e64c499a7c06, type: 3}
   - {fileID: 7180991349010121854, guid: cc2820bf59198e347b0511cfcc6f542d, type: 3}
+  - {fileID: 2888478200402387263, guid: e98587ff694572f40ba8f8a76fd29b2f, type: 3}
 --- !u!4 &1831807469
 Transform:
   m_ObjectHideFlags: 0
@@ -3089,8 +3089,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 919a079d7527ad8479c1954b918c52fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sendRate: 40
-  serializationRate: 20
+  sendRate: 10
+  serializationRate: 10
   maxPlayersInRoom: 10
 --- !u!1 &1861979723
 GameObject:

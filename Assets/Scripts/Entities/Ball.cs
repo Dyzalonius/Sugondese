@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Dyzalonius.Sugondese.Networking;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,16 +8,18 @@ public class Ball : MonoBehaviour
     [SerializeField]
     private float movementSpeed = 30f; // in km/h
 
+    public PlayerController Thrower { get; private set; }
+    public bool CanBePickedUp { get; private set; }
+    public NetworkedObject NetworkedObject { get; private set; }
+
     private Vector3 direction;
     private float speed;
-
-    public PlayerController Thrower { get; private set; }
-
-    public bool CanBePickedUp { get; private set; }
 
     private void Awake()
     {
         CanBePickedUp = true;
+        NetworkedObject = GetComponent<NetworkedObject>();
+        NetworkedObject.OnInstantiate.AddListener(Throw);
     }
 
     private void FixedUpdate()
@@ -26,15 +29,26 @@ public class Ball : MonoBehaviour
         transform.position += direction * speed;
     }
 
-    public void Pickup()
+    private void Throw(object[] data)
     {
-        Destroy(gameObject);
-    }
+        int throwerViewID = (int)data[0];
+        Vector3 direction = (Vector3)data[1];
+        int timeDiff = (int)data[2];
+        PlayerController thrower = NetworkingService.Instance.Find(throwerViewID).GetComponent<PlayerController>();
 
-    public void Throw(Vector3 direction, PlayerController thrower)
-    {
+        // Exit if thrower can't be found
+        if (thrower == null)
+        {
+            Debug.Log("Can't find thrower with id " + throwerViewID);
+            return;
+        }
+
         this.direction = direction;
         Thrower = thrower;
+
+        // Account for timediff between clients
+        speed = movementSpeed / 3.6f;
+        transform.position += this.direction * speed * timeDiff / 1000;
     }
 
     private void OnCollisionEnter2D(Collision2D other)
@@ -46,10 +60,11 @@ public class Ball : MonoBehaviour
 
                 if (Thrower == playerController) { return; }
 
+                if (!NetworkedObject.IsMine) { return; }
+
                 if (CanBePickedUp)
                 {
-                    playerController.PickupBall(this);
-                    Pickup();
+                    playerController.PickUpBall(this);
                 }
                 else
                 {

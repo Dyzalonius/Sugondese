@@ -7,6 +7,5 @@ public class SpawnPlayer : MonoBehaviour
     {
         Debug.Log("Spawn player");
         PlayerController playerController = NetworkingService.Instance.Instantiate("Player", Vector3.zero, Quaternion.identity).GetComponent<PlayerController>();
-        playerController.enabled = true;
     }
 }

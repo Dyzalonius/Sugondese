@@ -11,9 +11,22 @@ public class PlayerController : MonoBehaviour
     private Vector3 inputAim;
     private float speed;
     private List<Ball> balls = new List<Ball>();
+    
+    public NetworkedObject NetworkedObject { get; private set; }
+
+    private void Awake()
+    {
+        NetworkedObject = GetComponent<NetworkedObject>();
+    }
 
     private void Update()
     {
+        // Exit if not local
+        if (!NetworkedObject.IsMine)
+        {
+            return;
+        }
+
         UpdateInputMovement();
         UpdateInputAim();
 
@@ -84,16 +97,22 @@ public class PlayerController : MonoBehaviour
         inputAim.Normalize();
     }
 
-    public void PickupBall(Ball ball)
-    {
-        ball.transform.parent = transform;
-        balls.Add(ball);
-    }
-
     private void ThrowBall()
     {
-        Ball ball = NetworkingService.Instance.Instantiate("Ball", transform.position, Quaternion.identity).GetComponent<Ball>();
+        object[] data = new object[] { NetworkedObject.ViewId, inputAim };
+        NetworkingService.Instance.Instantiate("Ball", transform.position, Quaternion.identity, data).GetComponent<Ball>();
+    }
 
-        ball.Throw(inputAim, this);
+    public void PickUpBall(Ball ball)
+    {
+        //NetworkingService.Instance.SendPickUpBallEvent(networkedObject.ViewId, ball.NetworkedObject.ViewId);
+        //PickupBallLocal(ball);
+
+        NetworkingService.Instance.Destroy(ball.NetworkedObject);
+    }
+
+    public void PickupBallLocal(Ball ball)
+    {
+        //Destroy(ball.gameObject); //TODO: check if this properly lets photon know not to keep track
     }
 }

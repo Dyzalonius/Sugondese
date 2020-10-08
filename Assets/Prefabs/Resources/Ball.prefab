@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 2888478200402387261}
   - component: {fileID: 5671213276836048533}
   - component: {fileID: 2888478200402387260}
-  - component: {fileID: -8070284982689951436}
-  - component: {fileID: -4360437925537045364}
+  - component: {fileID: 4427812104841980998}
+  - component: {fileID: 6427831480359911656}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Ball
@@ -66,7 +66,7 @@ Rigidbody2D:
   m_AngularDrag: 0.05
   m_GravityScale: 1
   m_Material: {fileID: 0}
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 7
@@ -86,7 +86,7 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.24
---- !u!114 &-8070284982689951436
+--- !u!114 &4427812104841980998
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,10 +98,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 555f1ad6f65ef5b4f80e1588b660c3da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  synchronizePosition: 1
-  synchronizeRotation: 0
-  synchronizeScale: 0
---- !u!114 &-4360437925537045364
+  synchronizePosition: 0
+  OnInstantiate:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &6427831480359911656
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -119,7 +120,7 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 1
   ObservedComponents:
-  - {fileID: -8070284982689951436}
+  - {fileID: 4427812104841980998}
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -194,7 +195,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 54983538611da9d42886c20880d89bd6, type: 3}
-  m_Color: {r: 0.9019608, g: 0.101960786, b: 0.101960786, a: 1}
+  m_Color: {r: 0.101960786, g: 0.101960786, b: 0.9019608, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

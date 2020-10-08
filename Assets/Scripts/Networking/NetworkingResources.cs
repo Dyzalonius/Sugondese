@@ -15,9 +15,9 @@ namespace Dyzalonius.Sugondese.Networking
 
         private void Awake()
         {
-            PopulateNetworkedObjectsPool();
+            //PopulateNetworkedObjectsPool();
 
-            PhotonNetwork.PrefabPool = this;
+            //PhotonNetwork.PrefabPool = this;
         }
 
         /// <summary>Adds entries of prefabsNetworkedObjects to networkedObjectsPool if valid entry</summary>
