@@ -1,118 +1,137 @@
 ﻿using Dyzalonius.Sugondese.Networking;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
-public class PlayerController : MonoBehaviour
+namespace Dyzalonius.Sugondese.Entities
 {
-    [SerializeField]
-    private float movementSpeed = 15f; // in km/h
-
-    private Vector3 inputMovement;
-    private Vector3 inputAim;
-    private float speed;
-    private List<Ball> balls = new List<Ball>();
-    
-    public NetworkedObject NetworkedObject { get; private set; }
-
-    private void Awake()
+    public class PlayerController : MonoBehaviour
     {
-        NetworkedObject = GetComponent<NetworkedObject>();
-    }
+        [SerializeField]
+        private float movementSpeed = 15f; // in km/h
 
-    private void Update()
-    {
-        // Exit if not local
-        if (!NetworkedObject.IsMine)
+        private Vector3 inputMovement;
+        private Vector3 inputAim;
+        private float speed;
+        private List<BallType> balls = new List<BallType>();
+
+        public OnBallsChangeEvent OnBallsChange;
+
+        public NetworkedObject NetworkedObject { get; private set; }
+
+        private void Awake()
         {
-            return;
+            NetworkedObject = GetComponent<NetworkedObject>();
         }
 
-        UpdateInputMovement();
-        UpdateInputAim();
-
-        if (Input.GetKeyDown(KeyCode.Space))
+        private void Update()
         {
-            ThrowBall();
-        }
-    }
+            // Exit if not local
+            if (!NetworkedObject.IsMine)
+            {
+                return;
+            }
 
-    private void FixedUpdate()
-    {
-        // Calculate speed in meters per fixed delta time
-        speed = movementSpeed / 3.6f * Time.fixedDeltaTime;
-        transform.position += inputMovement * speed;
-    }
+            UpdateInputMovement();
+            UpdateInputAim();
 
-    private void UpdateInputMovement()
-    {
-        inputMovement = Vector3.zero;
-
-        if (Input.GetKey(KeyCode.W))
-        {
-            inputMovement.y += 1;
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                ThrowBall();
+            }
         }
 
-        if (Input.GetKey(KeyCode.A))
+        private void FixedUpdate()
         {
-            inputMovement.x -= 1;
+            // Calculate speed in meters per fixed delta time
+            speed = movementSpeed / 3.6f * Time.fixedDeltaTime;
+            transform.position += inputMovement * speed;
         }
 
-        if (Input.GetKey(KeyCode.S))
+        private void UpdateInputMovement()
         {
-            inputMovement.y -= 1;
+            inputMovement = Vector3.zero;
+
+            if (Input.GetKey(KeyCode.W))
+            {
+                inputMovement.y += 1;
+            }
+
+            if (Input.GetKey(KeyCode.A))
+            {
+                inputMovement.x -= 1;
+            }
+
+            if (Input.GetKey(KeyCode.S))
+            {
+                inputMovement.y -= 1;
+            }
+
+            if (Input.GetKey(KeyCode.D))
+            {
+                inputMovement.x += 1;
+            }
+
+            inputMovement.Normalize();
         }
 
-        if (Input.GetKey(KeyCode.D))
+        private void UpdateInputAim()
         {
-            inputMovement.x += 1;
+            inputAim = Vector3.zero;
+
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                inputAim.y += 1;
+            }
+
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                inputAim.x -= 1;
+            }
+
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                inputAim.y -= 1;
+            }
+
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                inputAim.x += 1;
+            }
+
+            inputAim.Normalize();
         }
 
-        inputMovement.Normalize();
-    }
-
-    private void UpdateInputAim()
-    {
-        inputAim = Vector3.zero;
-
-        if (Input.GetKey(KeyCode.UpArrow))
+        private void ThrowBall()
         {
-            inputAim.y += 1;
+            object[] data = new object[] { NetworkedObject.ViewId, inputAim };
+            NetworkingService.Instance.Instantiate("Ball", transform.position, Quaternion.identity, data).GetComponent<Ball>();
         }
 
-        if (Input.GetKey(KeyCode.LeftArrow))
+        public void ThrowBallLocal(BallType ballType)
         {
-            inputAim.x -= 1;
+            balls.Remove(ballType);
+            OnBallsChange.Invoke(balls);
         }
 
-        if (Input.GetKey(KeyCode.DownArrow))
+        public void PickUpBall(Ball ball)
         {
-            inputAim.y -= 1;
+            NetworkingService.Instance.SendPickUpBallEvent(ball.BallType, NetworkedObject.ViewId);
+            PickupBallLocal(ball.BallType);
+
+            NetworkingService.Instance.Destroy(ball.NetworkedObject);
         }
 
-        if (Input.GetKey(KeyCode.RightArrow))
+        public void PickupBallLocal(BallType ballType)
         {
-            inputAim.x += 1;
+            balls.Add(ballType);
+            OnBallsChange.Invoke(balls);
         }
 
-        inputAim.Normalize();
-    }
-
-    private void ThrowBall()
-    {
-        object[] data = new object[] { NetworkedObject.ViewId, inputAim };
-        NetworkingService.Instance.Instantiate("Ball", transform.position, Quaternion.identity, data).GetComponent<Ball>();
-    }
-
-    public void PickUpBall(Ball ball)
-    {
-        //NetworkingService.Instance.SendPickUpBallEvent(networkedObject.ViewId, ball.NetworkedObject.ViewId);
-        //PickupBallLocal(ball);
-
-        NetworkingService.Instance.Destroy(ball.NetworkedObject);
-    }
-
-    public void PickupBallLocal(Ball ball)
-    {
-        //Destroy(ball.gameObject); //TODO: check if this properly lets photon know not to keep track
+        public void HitBallLocal(Ball ball)
+        {
+            // Hit animation
+            // Lower health?
+        }
     }
 }

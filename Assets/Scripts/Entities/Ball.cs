@@ -1,97 +1,103 @@
 ﻿using Dyzalonius.Sugondese.Networking;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class Ball : MonoBehaviour
+namespace Dyzalonius.Sugondese.Entities
 {
-    [SerializeField]
-    private float movementSpeed = 30f; // in km/h
-
-    public PlayerController Thrower { get; private set; }
-    public bool CanBePickedUp { get; private set; }
-    public NetworkedObject NetworkedObject { get; private set; }
-
-    private Vector3 direction;
-    private float speed;
-
-    private void Awake()
+    public class Ball : MonoBehaviour
     {
-        CanBePickedUp = true;
-        NetworkedObject = GetComponent<NetworkedObject>();
-        NetworkedObject.OnInstantiate.AddListener(Throw);
-    }
+        [SerializeField]
+        private float movementSpeed = 30f; // in km/h
 
-    private void FixedUpdate()
-    {
-        // Calculate speed in meters per fixed delta time
-        speed = movementSpeed / 3.6f * Time.fixedDeltaTime;
-        transform.position += direction * speed;
-    }
+        [SerializeField]
+        private BallType ballType = BallType.Normal;
 
-    private void Throw(object[] data)
-    {
-        int throwerViewID = (int)data[0];
-        Vector3 direction = (Vector3)data[1];
-        int timeDiff = (int)data[2];
-        PlayerController thrower = NetworkingService.Instance.Find(throwerViewID).GetComponent<PlayerController>();
+        public PlayerController Thrower { get; private set; }
+        public bool CanBePickedUp { get; private set; }
+        public NetworkedObject NetworkedObject { get; private set; }
+        public BallType BallType { get { return ballType; } }
 
-        // Exit if thrower can't be found
-        if (thrower == null)
+        private Vector3 direction;
+        private float speed;
+
+        private void Awake()
         {
-            Debug.Log("Can't find thrower with id " + throwerViewID);
-            return;
+            CanBePickedUp = true;
+            NetworkedObject = GetComponent<NetworkedObject>();
+            NetworkedObject.OnInstantiate.AddListener(Throw);
         }
 
-        this.direction = direction;
-        Thrower = thrower;
-
-        // Account for timediff between clients
-        speed = movementSpeed / 3.6f;
-        transform.position += this.direction * speed * timeDiff / 1000;
-    }
-
-    private void OnCollisionEnter2D(Collision2D other)
-    {
-        switch (other.gameObject.tag)
+        private void FixedUpdate()
         {
-            case "Player":
-                PlayerController playerController = other.gameObject.GetComponent<PlayerController>();
-
-                if (Thrower == playerController) { return; }
-
-                if (!NetworkedObject.IsMine) { return; }
-
-                if (CanBePickedUp)
-                {
-                    playerController.PickUpBall(this);
-                }
-                else
-                {
-                    // hit player
-                }
-                break;
-
-            case "Wall":
-                direction = Vector3.Reflect(direction, other.contacts[0].normal);
-                break;
-
-            default:
-                break;
+            // Calculate speed in meters per fixed delta time
+            speed = movementSpeed / 3.6f * Time.fixedDeltaTime;
+            transform.position += direction * speed;
         }
-    }
 
-    private void OnCollisionExit2D(Collision2D other)
-    {
-        switch (other.gameObject.tag)
+        private void Throw(object[] data)
         {
-            case "Player":
-                PlayerController playerController = other.gameObject.GetComponent<PlayerController>();
-                if (Thrower == playerController)
-                {
-                    Thrower = null;
-                }
-                break;
+            int throwerViewID = (int)data[0];
+            Vector3 direction = (Vector3)data[1];
+            int timeDiff = (int)data[2];
+            PlayerController thrower = NetworkingService.Instance.Find(throwerViewID).GetComponent<PlayerController>();
+
+            // Exit if thrower can't be found
+            if (thrower == null)
+            {
+                Debug.Log("Can't find thrower with id " + throwerViewID);
+                return;
+            }
+
+            this.direction = direction;
+            Thrower = thrower;
+            Thrower.ThrowBallLocal(BallType);
+
+            // Account for timediff between clients
+            speed = movementSpeed / 3.6f;
+            transform.position += this.direction * speed * timeDiff / 1000;
+        }
+
+        private void OnCollisionEnter2D(Collision2D other)
+        {
+            switch (other.gameObject.tag)
+            {
+                case "Player":
+                    PlayerController playerController = other.gameObject.GetComponent<PlayerController>();
+
+                    if (Thrower == playerController) { return; }
+
+                    if (!NetworkedObject.IsMine) { return; }
+
+                    if (CanBePickedUp)
+                    {
+                        playerController.PickUpBall(this);
+                    }
+                    else
+                    {
+                        // hit player
+                    }
+                    break;
+
+                case "Wall":
+                    direction = Vector3.Reflect(direction, other.contacts[0].normal);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void OnCollisionExit2D(Collision2D other)
+        {
+            switch (other.gameObject.tag)
+            {
+                case "Player":
+                    PlayerController playerController = other.gameObject.GetComponent<PlayerController>();
+                    if (Thrower == playerController)
+                    {
+                        Thrower = null;
+                    }
+                    break;
+            }
         }
     }
 }

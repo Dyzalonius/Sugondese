@@ -1,4 +1,5 @@
-﻿using ExitGames.Client.Photon;
+﻿using Dyzalonius.Sugondese.Entities;
+using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -23,6 +24,7 @@ namespace Dyzalonius.Sugondese.Networking
 
         private NetworkingResources networkingResources;
         private const byte pickUpBallEventCode = 1;
+        private const byte hitBallEventCode = 2;
 
         private void Awake()
         {
@@ -42,6 +44,16 @@ namespace Dyzalonius.Sugondese.Networking
             PhotonNetwork.SerializationRate = serializationRate;
             DontDestroyOnLoad(gameObject);
             PhotonNetwork.ConnectUsingSettings();
+        }
+
+        private void OnEnable()
+        {
+            PhotonNetwork.AddCallbackTarget(this);
+        }
+
+        private void OnDisable()
+        {
+            PhotonNetwork.RemoveCallbackTarget(this);
         }
 
         public GameObject Instantiate(string prefabName, Vector3 position, Quaternion rotation)
@@ -68,52 +80,68 @@ namespace Dyzalonius.Sugondese.Networking
             return PhotonView.Find(viewID).gameObject;
         }
 
-        private void OnEnable()
-        {
-            PhotonNetwork.AddCallbackTarget(this);
-        }
-
-        private void OnDisable()
-        {
-            PhotonNetwork.RemoveCallbackTarget(this);
-        }
-
         public void OnEvent(EventData photonEvent)
         {
             byte eventCode = photonEvent.Code;
             object[] data;
-            int ballViewID;
 
             switch (eventCode)
             {
                 case pickUpBallEventCode:
                     data = (object[])photonEvent.CustomData;
-                    ballViewID = (int)data[0];
+                    BallType ballType = (BallType)data[0];
                     int pickerViewID = (int)data[1];
-                    ReceivePickUpBallEvent(ballViewID, pickerViewID);
+                    ReceivePickUpBallEvent(ballType, pickerViewID);
+                    break;
+
+                case hitBallEventCode:
+                    data = (object[])photonEvent.CustomData;
+                    int ballViewID = (int)data[0];
+                    int hitPlayerViewID = (int)data[1];
+                    ReceiveHitBallEvent(ballViewID, hitPlayerViewID);
                     break;
             }
         }
 
-        public void SendPickUpBallEvent(int ballViewID, int pickerID)
+        public void SendPickUpBallEvent(BallType ballType, int pickerViewID)
         {
-            object[] data = new object[] { ballViewID, pickerID };
+            object[] data = new object[] { ballType, pickerViewID };
             RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
             PhotonNetwork.RaiseEvent(pickUpBallEventCode, data, raiseEventOptions, SendOptions.SendReliable);
         }
 
-        private void ReceivePickUpBallEvent(int ballViewID, int pickerID)
+        private void ReceivePickUpBallEvent(BallType ballType, int pickerViewID)
         {
-            Ball ball = PhotonView.Find(ballViewID)?.GetComponent<Ball>();
-            PlayerController picker = PhotonView.Find(pickerID)?.GetComponent<PlayerController>();
+            PlayerController picker = PhotonView.Find(pickerViewID)?.GetComponent<PlayerController>();
 
-            if (ball == null || picker == null)
+            if (picker == null)
             {
-                Debug.LogWarning("Can't find ball with id " + ballViewID + " or picker with id " + pickerID );
+                Debug.LogWarning("Can't find picker with id " + pickerViewID );
                 return;
             }
 
-            picker.PickupBallLocal(ball);
+            picker.PickupBallLocal(ballType);
+        }
+
+        public void SendHitBallEvent(int ballViewID, int hitPlayerViewID)
+        {
+            object[] data = new object[] { ballViewID, hitPlayerViewID };
+            RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
+            PhotonNetwork.RaiseEvent(hitBallEventCode, data, raiseEventOptions, SendOptions.SendReliable);
+        }
+
+        private void ReceiveHitBallEvent(int ballViewID, int hitPlayerViewID)
+        {
+            Ball ball = PhotonView.Find(ballViewID)?.GetComponent<Ball>();
+            PlayerController hitPlayer = PhotonView.Find(hitPlayerViewID)?.GetComponent<PlayerController>();
+
+            if (ball == null || hitPlayer == null)
+            {
+                Debug.LogWarning("Can't find ball with id " + ballViewID + " or hit player with id " + hitPlayerViewID);
+                return;
+            }
+
+            hitPlayer.HitBallLocal(ball);
         }
 
         private void OnValidate()

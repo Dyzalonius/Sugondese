@@ -49,6 +49,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   movementSpeed: 30
+  ballType: 0
 --- !u!50 &5671213276836048533
 Rigidbody2D:
   serializedVersion: 4
@@ -195,7 +196,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 54983538611da9d42886c20880d89bd6, type: 3}
-  m_Color: {r: 0.101960786, g: 0.101960786, b: 0.9019608, a: 1}
+  m_Color: {r: 0.9019608, g: 0.101960786, b: 0.101960786, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

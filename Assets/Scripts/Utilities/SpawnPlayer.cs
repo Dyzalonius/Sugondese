@@ -1,4 +1,5 @@
-﻿using Dyzalonius.Sugondese.Networking;
+﻿using Dyzalonius.Sugondese.Entities;
+using Dyzalonius.Sugondese.Networking;
 using UnityEngine;
 
 public class SpawnPlayer : MonoBehaviour
