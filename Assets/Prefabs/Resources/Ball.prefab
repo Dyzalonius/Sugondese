@@ -50,6 +50,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movementSpeed: 30
   ballType: 0
+  speedTweenTime: 0.5
+  speedFactorOnHit: 0.5
 --- !u!50 &5671213276836048533
 Rigidbody2D:
   serializedVersion: 4

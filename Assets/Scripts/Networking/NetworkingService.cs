@@ -98,7 +98,9 @@ namespace Dyzalonius.Sugondese.Networking
                     data = (object[])photonEvent.CustomData;
                     int ballViewID = (int)data[0];
                     int hitPlayerViewID = (int)data[1];
-                    ReceiveHitBallEvent(ballViewID, hitPlayerViewID);
+                    Vector3 ballHitPosition = (Vector3)data[2];
+                    int hitTimeStamp = (int)data[3];
+                    ReceiveHitBallEvent(ballViewID, hitPlayerViewID, ballHitPosition, hitTimeStamp);
                     break;
             }
         }
@@ -123,14 +125,14 @@ namespace Dyzalonius.Sugondese.Networking
             picker.PickupBallLocal(ballType);
         }
 
-        public void SendHitBallEvent(int ballViewID, int hitPlayerViewID)
+        public void SendHitBallEvent(int ballViewID, int hitPlayerViewID, Vector3 ballHitPosition)
         {
-            object[] data = new object[] { ballViewID, hitPlayerViewID };
+            object[] data = new object[] { ballViewID, hitPlayerViewID, ballHitPosition, PhotonNetwork.ServerTimestamp };
             RaiseEventOptions raiseEventOptions = new RaiseEventOptions { Receivers = ReceiverGroup.Others };
             PhotonNetwork.RaiseEvent(hitBallEventCode, data, raiseEventOptions, SendOptions.SendReliable);
         }
 
-        private void ReceiveHitBallEvent(int ballViewID, int hitPlayerViewID)
+        private void ReceiveHitBallEvent(int ballViewID, int hitPlayerViewID, Vector3 ballHitPosition, int hitTimeStamp)
         {
             Ball ball = PhotonView.Find(ballViewID)?.GetComponent<Ball>();
             PlayerController hitPlayer = PhotonView.Find(hitPlayerViewID)?.GetComponent<PlayerController>();
@@ -141,7 +143,7 @@ namespace Dyzalonius.Sugondese.Networking
                 return;
             }
 
-            hitPlayer.HitBallLocal(ball);
+            hitPlayer.HitBallLocal(ball, ballHitPosition, PhotonNetwork.ServerTimestamp - hitTimeStamp);
         }
 
         private void OnValidate()

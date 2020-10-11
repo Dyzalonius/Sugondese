@@ -1,7 +1,6 @@
 ﻿using Dyzalonius.Sugondese.Networking;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Dyzalonius.Sugondese.Entities
 {
@@ -128,10 +127,15 @@ namespace Dyzalonius.Sugondese.Entities
             OnBallsChange.Invoke(balls);
         }
 
-        public void HitBallLocal(Ball ball)
+        public void HitBall(Ball ball)
         {
-            // Hit animation
-            // Lower health?
+            NetworkingService.Instance.SendHitBallEvent(ball.NetworkedObject.ViewId, NetworkedObject.ViewId, ball.transform.position);
+            HitBallLocal(ball, ball.transform.position, 0);
+        }
+
+        public void HitBallLocal(Ball ball, Vector3 ballLocation, int timeDiff)
+        {
+            ball.Hit(ballLocation, timeDiff);
         }
     }
 }
