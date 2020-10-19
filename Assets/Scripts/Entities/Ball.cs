@@ -25,6 +25,7 @@ namespace Dyzalonius.Sugondese.Entities
         public bool CanBePickedUp { get; private set; }
         public NetworkedObject NetworkedObject { get; private set; }
         public BallType BallType { get { return ballType; } }
+        public Vector3 Direction { get { return direction; } }
 
         private void Awake()
         {
@@ -40,38 +41,23 @@ namespace Dyzalonius.Sugondese.Entities
             transform.position += direction * speedPerTick;
         }
 
-        public void Hit(Vector3 hitPosition, int timeDiff)
+        public void Hit(Vector3 hitPosition, Vector3 directionAfterHit, int timeDiff)
         {
-            direction *= -1;
+            direction = directionAfterHit;
             movementSpeedCurrent *= speedFactorOnHit;
             CanBePickedUp = true;
             transform.position = hitPosition;
 
             // Account for timediff between clients
-            float tweenTimeLeft = speedTweenTime - (timeDiff / 1000);
-            float movementSpeedAfterTime = movementSpeedCurrent * tweenTimeLeft / speedTweenTime;
-
-            // Calculate average speed over timediff
+            float tweenTimePast = Mathf.Clamp(timeDiff / 1000, 0f, speedTweenTime);
+            float tweenTimeLeft = Mathf.Clamp(speedTweenTime - tweenTimePast, 0f, speedTweenTime);
+            float movementSpeedAfterTime = movementSpeedCurrent * tweenTimeLeft / speedTweenTime; //TODO: make sure this is calculated properly!
             float averageSpeedOverTimeDiffInMetersPerSecond = (movementSpeedCurrent + movementSpeedAfterTime) / 2 / 3.6f;
-
-            // Calculate travelled distance using speed and time
-            float distanceTravelled = averageSpeedOverTimeDiffInMetersPerSecond * timeDiff / 1000;
+            float distanceTravelledOverTimeDiff = averageSpeedOverTimeDiffInMetersPerSecond * tweenTimePast;
 
             // !!! Temporarily commented out to test if my method works at all.
-            //transform.position += direction * distanceTravelled;
-            //LeanTween.value(movementSpeedAfterTime, 0f, tweenTimeLeft).setOnUpdate(val => movementSpeedCurrent = val);
-
-            // !!! Temporarily method to test if the tween/timediff method works. It's not fully working
-            if (timeDiff == 0)
-            {
-                LeanTween.value(movementSpeedCurrent, 0f, speedTweenTime).setOnUpdate(val => movementSpeedCurrent = val);
-            }
-            else
-            {
-
-                movementSpeedCurrent = 0f;
-                transform.position += direction * averageSpeedOverTimeDiffInMetersPerSecond * speedTweenTime;
-            }
+            transform.position += direction * distanceTravelledOverTimeDiff;
+            LeanTween.value(movementSpeedAfterTime, 0f, tweenTimeLeft).setOnUpdate(val => movementSpeedCurrent = val);
         }
 
         private void Throw(object[] data)

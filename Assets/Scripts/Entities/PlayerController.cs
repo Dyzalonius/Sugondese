@@ -129,13 +129,14 @@ namespace Dyzalonius.Sugondese.Entities
 
         public void HitBall(Ball ball)
         {
-            NetworkingService.Instance.SendHitBallEvent(ball.NetworkedObject.ViewId, NetworkedObject.ViewId, ball.transform.position);
-            HitBallLocal(ball, ball.transform.position, 0);
+            Vector3 newDirection = ball.Direction * -1;
+            NetworkingService.Instance.SendHitBallEvent(ball.NetworkedObject.ViewId, NetworkedObject.ViewId, ball.transform.position, newDirection);
+            HitBallLocal(ball, ball.transform.position, newDirection, 0);
         }
 
-        public void HitBallLocal(Ball ball, Vector3 ballLocation, int timeDiff)
+        public void HitBallLocal(Ball ball, Vector3 ballLocation, Vector3 ballDirection, int timeDiff)
         {
-            ball.Hit(ballLocation, timeDiff);
+            ball.Hit(ballLocation, ballDirection, timeDiff);
         }
     }
 }
