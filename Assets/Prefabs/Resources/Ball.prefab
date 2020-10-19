@@ -52,6 +52,7 @@ MonoBehaviour:
   ballType: 0
   speedTweenTime: 0.5
   speedFactorOnHit: 0.5
+  ballRenderer: {fileID: 2888478202131333605}
 --- !u!50 &5671213276836048533
 Rigidbody2D:
   serializedVersion: 4
@@ -102,6 +103,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   synchronizePosition: 0
+  interpolatePosition: 0
   OnInstantiate:
     m_PersistentCalls:
       m_Calls: []

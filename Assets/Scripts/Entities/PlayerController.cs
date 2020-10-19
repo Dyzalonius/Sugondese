@@ -116,14 +116,18 @@ namespace Dyzalonius.Sugondese.Entities
 
         public void PickUpBall(Ball ball)
         {
-            NetworkingService.Instance.SendPickUpBallEvent(ball.BallType, NetworkedObject.ViewId);
-            PickupBallLocal(ball.BallType);
-
-            NetworkingService.Instance.Destroy(ball.NetworkedObject);
+            NetworkingService.Instance.SendPickUpBallEvent(ball.BallType, ball.NetworkedObject.ViewId, NetworkedObject.ViewId);
+            PickupBallLocal(ball.BallType, ball);
         }
 
-        public void PickupBallLocal(BallType ballType)
+        public void PickupBallLocal(BallType ballType, Ball ball = null)
         {
+            // Hide ball model if a ball is passed
+            if (ball != null)
+            {
+                ball.Hide();
+            }
+
             balls.Add(ballType);
             OnBallsChange.Invoke(balls);
         }

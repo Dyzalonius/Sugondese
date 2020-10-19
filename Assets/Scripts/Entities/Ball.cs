@@ -17,6 +17,9 @@ namespace Dyzalonius.Sugondese.Entities
         [SerializeField]
         private float speedFactorOnHit = 0.5f;
 
+        [SerializeField]
+        private SpriteRenderer ballRenderer = null;
+
         private Vector3 direction;
         private float speedPerTick;
         private float movementSpeedCurrent;
@@ -60,6 +63,11 @@ namespace Dyzalonius.Sugondese.Entities
             LeanTween.value(movementSpeedAfterTime, 0f, tweenTimeLeft).setOnUpdate(val => movementSpeedCurrent = val);
         }
 
+        public void Hide()
+        {
+            ballRenderer.enabled = false;
+        }
+
         private void Throw(object[] data)
         {
             int throwerViewID = (int)data[0];
@@ -92,8 +100,7 @@ namespace Dyzalonius.Sugondese.Entities
                     PlayerController playerController = other.gameObject.GetComponent<PlayerController>();
 
                     if (Thrower == playerController) { return; }
-
-                    if (!NetworkedObject.IsMine) { return; }
+                    if (!playerController.NetworkedObject.IsMine) { return; }
 
                     if (CanBePickedUp)
                     {
