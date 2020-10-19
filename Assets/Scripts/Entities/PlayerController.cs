@@ -21,6 +21,7 @@ namespace Dyzalonius.Sugondese.Entities
         private void Awake()
         {
             NetworkedObject = GetComponent<NetworkedObject>();
+            NetworkedObject.MovementSpeedInMetersPerSecond = movementSpeed / 3.6f;
         }
 
         private void Update()

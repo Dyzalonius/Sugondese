@@ -9,15 +9,31 @@ namespace Dyzalonius.Sugondese.Networking
         [SerializeField]
         private bool synchronizePosition = true;
 
+        [SerializeField]
+        private bool interpolatePosition = false;
+
         public PhotonView PhotonView { get; private set; }
         public bool IsMine { get { return PhotonView.IsMine; } }
         public int ViewId { get { return PhotonView.ViewID; } }
+        public float MovementSpeedInMetersPerSecond { private get; set; }
 
         public OnInstantiateEvent OnInstantiate;
+
+        private Vector3 networkPosition;
+        private Vector3 movement;
 
         private void Awake()
         {
             PhotonView = GetComponent<PhotonView>();
+        }
+
+        private void Update()
+        {
+            // 1: Lerp
+            if (!IsMine && synchronizePosition && interpolatePosition)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, networkPosition, Time.deltaTime * MovementSpeedInMetersPerSecond);
+            }
         }
 
         public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
@@ -33,7 +49,22 @@ namespace Dyzalonius.Sugondese.Networking
             }
             else
             {
-                transform.position = (Vector3)stream.ReceiveNext();
+                Vector3 receivedPosition = (Vector3)stream.ReceiveNext();
+
+                if (interpolatePosition)
+                {
+                    // Update networked position
+                    networkPosition = receivedPosition;
+
+                    // Add lag compensation (prediction based on movement)
+                    float lag = Mathf.Abs((float)(PhotonNetwork.Time - info.SentServerTime));
+                    networkPosition += (movement * lag);
+                    movement = networkPosition - transform.position;
+                }
+                else
+                {
+                    transform.position = receivedPosition;
+                }
             }
         }
 
