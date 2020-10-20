@@ -20,9 +20,12 @@ namespace Dyzalonius.Sugondese.Entities
         [SerializeField]
         private SpriteRenderer ballRenderer = null;
 
+
         private Vector3 direction;
         private float speedPerTick;
         private float movementSpeedCurrent;
+        private Collider2D wallCollider;
+        private Collider2D ballCollider;
 
         public PlayerController Thrower { get; private set; }
         public bool CanBePickedUp { get; private set; }
@@ -35,13 +38,42 @@ namespace Dyzalonius.Sugondese.Entities
             CanBePickedUp = false;
             NetworkedObject = GetComponent<NetworkedObject>();
             NetworkedObject.OnInstantiate.AddListener(Throw);
+            ballCollider = GetComponent<Collider2D>();
+            wallCollider = GameObject.FindWithTag("Wall").GetComponent<Collider2D>();
         }
 
         private void FixedUpdate()
         {
+            UpdatePos();
+        }
+
+        private void UpdatePos()
+        {
             // Calculate speed in meters per fixed delta time
             speedPerTick = movementSpeedCurrent / 3.6f * Time.fixedDeltaTime;
             transform.position += direction * speedPerTick;
+
+            // Check bounce
+            if (wallCollider.bounds.min.x > transform.position.x - ballCollider.bounds.extents.x && direction.x < 0)
+            {
+                Debug.Log("right");
+                direction = Vector3.Reflect(direction, Vector3.right);
+            }
+            if (wallCollider.bounds.max.x < transform.position.x + ballCollider.bounds.extents.x && direction.x > 0)
+            {
+                Debug.Log("left");
+                direction = Vector3.Reflect(direction, Vector3.left);
+            }
+            if (wallCollider.bounds.min.y > transform.position.y - ballCollider.bounds.extents.y && direction.y < 0)
+            {
+                Debug.Log("up");
+                direction = Vector3.Reflect(direction, Vector3.up);
+            }
+            if (wallCollider.bounds.max.y < transform.position.y + ballCollider.bounds.extents.y && direction.y > 0)
+            {
+                Debug.Log("down");
+                direction = Vector3.Reflect(direction, Vector3.down);
+            }
         }
 
         public void Hit(Vector3 hitPosition, Vector3 directionAfterHit, int timeDiff)
@@ -54,11 +86,10 @@ namespace Dyzalonius.Sugondese.Entities
             // Account for timediff between clients
             float tweenTimePast = Mathf.Clamp(timeDiff / 1000, 0f, speedTweenTime);
             float tweenTimeLeft = Mathf.Clamp(speedTweenTime - tweenTimePast, 0f, speedTweenTime);
-            float movementSpeedAfterTime = movementSpeedCurrent * tweenTimeLeft / speedTweenTime; //TODO: make sure this is calculated properly!
+            float movementSpeedAfterTime = movementSpeedCurrent * tweenTimeLeft / speedTweenTime;
             float averageSpeedOverTimeDiffInMetersPerSecond = (movementSpeedCurrent + movementSpeedAfterTime) / 2 / 3.6f;
             float distanceTravelledOverTimeDiff = averageSpeedOverTimeDiffInMetersPerSecond * tweenTimePast;
 
-            // !!! Temporarily commented out to test if my method works at all.
             transform.position += direction * distanceTravelledOverTimeDiff;
             LeanTween.value(movementSpeedAfterTime, 0f, tweenTimeLeft).setOnUpdate(val => movementSpeedCurrent = val);
         }
@@ -88,8 +119,12 @@ namespace Dyzalonius.Sugondese.Entities
             Thrower.ThrowBallLocal(BallType);
 
             // Account for timediff between clients
-            speedPerTick = movementSpeedCurrent / 3.6f;
-            transform.position += this.direction * speedPerTick * timeDiff / 1000;
+            speedPerTick = movementSpeedCurrent / 3.6f * Time.fixedDeltaTime;
+            int ticks = timeDiff / Mathf.RoundToInt(Time.fixedDeltaTime * 1000);
+            for (int i = 0; i < ticks; i++)
+            {
+                UpdatePos();
+            }
         }
 
         private void OnCollisionEnter2D(Collision2D other)
@@ -110,10 +145,6 @@ namespace Dyzalonius.Sugondese.Entities
                     {
                         playerController.HitBall(this);
                     }
-                    break;
-
-                case "Wall":
-                    direction = Vector3.Reflect(direction, other.contacts[0].normal);
                     break;
 
                 default:
