@@ -57,22 +57,18 @@ namespace Dyzalonius.Sugondese.Entities
             // Check bounce
             if (wallCollider.bounds.min.x > transform.position.x - ballCollider.bounds.extents.x && direction.x < 0)
             {
-                Debug.Log("right");
                 direction = Vector3.Reflect(direction, Vector3.right);
             }
             if (wallCollider.bounds.max.x < transform.position.x + ballCollider.bounds.extents.x && direction.x > 0)
             {
-                Debug.Log("left");
                 direction = Vector3.Reflect(direction, Vector3.left);
             }
             if (wallCollider.bounds.min.y > transform.position.y - ballCollider.bounds.extents.y && direction.y < 0)
             {
-                Debug.Log("up");
                 direction = Vector3.Reflect(direction, Vector3.up);
             }
             if (wallCollider.bounds.max.y < transform.position.y + ballCollider.bounds.extents.y && direction.y > 0)
             {
-                Debug.Log("down");
                 direction = Vector3.Reflect(direction, Vector3.down);
             }
         }

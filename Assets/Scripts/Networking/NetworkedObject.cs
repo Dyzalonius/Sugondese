@@ -7,16 +7,13 @@ namespace Dyzalonius.Sugondese.Networking
     public class NetworkedObject : MonoBehaviour, IPunObservable, IPunInstantiateMagicCallback
     {
         [SerializeField]
-        private bool synchronizePosition = true;
+        private bool syncPosition = true;
 
         [SerializeField]
-        private bool synchronizeDirection = false;
+        private bool syncPositionInterpolation = false;
 
         [SerializeField]
-        private bool synchronizeDirectionOnlyWhenDesynced = false;
-
-        [SerializeField]
-        private bool interpolatePosition = false;
+        private bool syncDirectionWhenDesynced = false;
 
         [SerializeField]
         private float maxPositionDesync = 1f;
@@ -39,8 +36,7 @@ namespace Dyzalonius.Sugondese.Networking
 
         private void Update()
         {
-            // 1: Lerp
-            if (!IsMine && synchronizePosition && interpolatePosition)
+            if (!IsMine && syncPosition && syncPositionInterpolation)
             {
                 transform.position = Vector3.MoveTowards(transform.position, networkPosition, Time.deltaTime * MovementSpeedInMetersPerSecond);
             }
@@ -48,7 +44,7 @@ namespace Dyzalonius.Sugondese.Networking
 
         public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
-            if (!synchronizePosition)
+            if (!syncPosition)
             {
                 return;
             }
@@ -56,8 +52,7 @@ namespace Dyzalonius.Sugondese.Networking
             if (stream.IsWriting)
             {
                 stream.SendNext(transform.position);
-
-                if (synchronizeDirection)
+                if (syncDirectionWhenDesynced)
                 {
                     stream.SendNext(Direction);
                 }
@@ -67,12 +62,12 @@ namespace Dyzalonius.Sugondese.Networking
                 Vector3 receivedPosition = (Vector3)stream.ReceiveNext();
                 Vector3 receivedDirection = Vector3.zero;
 
-                if (synchronizeDirection)
+                if (syncDirectionWhenDesynced)
                 {
                     receivedDirection = (Vector3)stream.ReceiveNext();
                 }
 
-                if (interpolatePosition)
+                if (syncPositionInterpolation)
                 {
                     // Update networked position
                     networkPosition = receivedPosition;
@@ -84,22 +79,14 @@ namespace Dyzalonius.Sugondese.Networking
                 }
                 else
                 {
-                    if (synchronizeDirection)
+                    if (syncDirectionWhenDesynced)
                     {
-                        float lag = Mathf.Abs((float)(PhotonNetwork.Time - info.SentServerTime)); // in seconds
-                        Vector3 newPos = receivedPosition + receivedDirection * MovementSpeedInMetersPerSecond * lag;
+                        float lag = (float)(PhotonNetwork.Time - info.SentServerTime);
 
-                        if (synchronizeDirectionOnlyWhenDesynced)
+                        float distance = (transform.position - receivedPosition).magnitude;
+                        if (distance > maxPositionDesync && Direction == receivedDirection)
                         {
-                            float distance = (transform.position - newPos).magnitude;
-                            if (distance > maxPositionDesync)
-                            {
-                                transform.position = newPos;
-                            }
-                        }
-                        else
-                        {
-                            transform.position = newPos;
+                            transform.position = receivedPosition + receivedDirection * MovementSpeedInMetersPerSecond * lag;
                         }
                     }
                     else
@@ -120,6 +107,15 @@ namespace Dyzalonius.Sugondese.Networking
             data[data.Length - 1] = timeDiff;
 
             OnInstantiate.Invoke(data);
+        }
+
+        private void OnValidate()
+        {
+            if (!syncPosition)
+            {
+                syncPositionInterpolation = false;
+                syncDirectionWhenDesynced = false;
+            }
         }
     }
 }
