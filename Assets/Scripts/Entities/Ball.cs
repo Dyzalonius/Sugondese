@@ -27,6 +27,7 @@ namespace Dyzalonius.Sugondese.Entities
         private Collider2D ballCollider;
 
         public PlayerController Thrower { get; private set; }
+        public bool CanHit { get; private set; }
         public bool CanBePickedUp { get; private set; }
         public NetworkedObject NetworkedObject { get; private set; }
         public BallType BallType { get { return ballType; } }
@@ -34,6 +35,7 @@ namespace Dyzalonius.Sugondese.Entities
 
         private void Awake()
         {
+            CanHit = true;
             CanBePickedUp = false;
             NetworkedObject = GetComponent<NetworkedObject>();
             NetworkedObject.OnInstantiate.AddListener(Throw);
@@ -77,6 +79,7 @@ namespace Dyzalonius.Sugondese.Entities
         {
             direction = directionAfterHit;
             movementSpeedCurrent *= speedFactorOnHit;
+            CanHit = false;
             CanBePickedUp = true;
             transform.position = hitPosition;
 
@@ -94,6 +97,7 @@ namespace Dyzalonius.Sugondese.Entities
         public void Hide()
         {
             ballRenderer.enabled = false;
+            CanBePickedUp = false;
         }
 
         private void Throw(object[] data)
@@ -138,7 +142,7 @@ namespace Dyzalonius.Sugondese.Entities
                     {
                         playerController.PickUpBall(this);
                     }
-                    else
+                    else if (CanHit)
                     {
                         playerController.HitBall(this);
                     }
