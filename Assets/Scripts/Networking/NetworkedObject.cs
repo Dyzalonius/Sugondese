@@ -10,12 +10,22 @@ namespace Dyzalonius.Sugondese.Networking
         private bool synchronizePosition = true;
 
         [SerializeField]
+        private bool synchronizeDirection = false;
+
+        [SerializeField]
+        private bool synchronizeDirectionOnlyWhenDesynced = false;
+
+        [SerializeField]
         private bool interpolatePosition = false;
+
+        [SerializeField]
+        private float maxPositionDesync = 1f;
 
         public PhotonView PhotonView { get; private set; }
         public bool IsMine { get { return PhotonView.IsMine; } }
         public int ViewId { get { return PhotonView.ViewID; } }
         public float MovementSpeedInMetersPerSecond { private get; set; }
+        public Vector3 Direction { private get; set; }
 
         public OnInstantiateEvent OnInstantiate;
 
@@ -46,10 +56,21 @@ namespace Dyzalonius.Sugondese.Networking
             if (stream.IsWriting)
             {
                 stream.SendNext(transform.position);
+
+                if (synchronizeDirection)
+                {
+                    stream.SendNext(Direction);
+                }
             }
             else
             {
                 Vector3 receivedPosition = (Vector3)stream.ReceiveNext();
+                Vector3 receivedDirection = Vector3.zero;
+
+                if (synchronizeDirection)
+                {
+                    receivedDirection = (Vector3)stream.ReceiveNext();
+                }
 
                 if (interpolatePosition)
                 {
@@ -63,7 +84,28 @@ namespace Dyzalonius.Sugondese.Networking
                 }
                 else
                 {
-                    transform.position = receivedPosition;
+                    if (synchronizeDirection)
+                    {
+                        float lag = Mathf.Abs((float)(PhotonNetwork.Time - info.SentServerTime)); // in seconds
+                        Vector3 newPos = receivedPosition + receivedDirection * MovementSpeedInMetersPerSecond * lag;
+
+                        if (synchronizeDirectionOnlyWhenDesynced)
+                        {
+                            float distance = (transform.position - newPos).magnitude;
+                            if (distance > maxPositionDesync)
+                            {
+                                transform.position = newPos;
+                            }
+                        }
+                        else
+                        {
+                            transform.position = newPos;
+                        }
+                    }
+                    else
+                    {
+                        transform.position = receivedPosition;
+                    }
                 }
             }
         }

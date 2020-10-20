@@ -102,8 +102,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 555f1ad6f65ef5b4f80e1588b660c3da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  synchronizePosition: 0
+  synchronizePosition: 1
+  synchronizeDirection: 1
+  synchronizeDirectionOnlyWhenDesynced: 1
   interpolatePosition: 0
+  maxPositionDesync: 1
   OnInstantiate:
     m_PersistentCalls:
       m_Calls: []

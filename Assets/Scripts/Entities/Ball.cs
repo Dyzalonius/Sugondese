@@ -20,7 +20,6 @@ namespace Dyzalonius.Sugondese.Entities
         [SerializeField]
         private SpriteRenderer ballRenderer = null;
 
-
         private Vector3 direction;
         private float speedPerTick;
         private float movementSpeedCurrent;
@@ -45,6 +44,8 @@ namespace Dyzalonius.Sugondese.Entities
         private void FixedUpdate()
         {
             UpdatePos();
+            NetworkedObject.MovementSpeedInMetersPerSecond = movementSpeedCurrent / 3.6f;
+            NetworkedObject.Direction = direction;
         }
 
         private void UpdatePos()

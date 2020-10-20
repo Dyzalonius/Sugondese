@@ -336,7 +336,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   synchronizePosition: 1
+  synchronizeDirection: 0
+  synchronizeDirectionOnlyWhenDesynced: 0
   interpolatePosition: 1
+  maxPositionDesync: 1
   OnInstantiate:
     m_PersistentCalls:
       m_Calls: []
