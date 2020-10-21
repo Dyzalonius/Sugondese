@@ -9,6 +9,12 @@ namespace Dyzalonius.Sugondese.Entities
         [SerializeField]
         private float movementSpeed = 15f; // in km/h
 
+        [SerializeField]
+        private bool throwBallFromBehindPlayer = false;
+
+        [SerializeField]
+        private float throwDistanceBehindPlayer = 1f;
+
         private Vector3 inputMovement;
         private Vector3 inputAim;
         private float speed;
@@ -104,8 +110,14 @@ namespace Dyzalonius.Sugondese.Entities
 
         private void ThrowBall()
         {
+            Vector3 throwPos = transform.position;
+            if (throwBallFromBehindPlayer)
+            {
+                throwPos -= inputAim * throwDistanceBehindPlayer;
+            }
+
             object[] data = new object[] { NetworkedObject.ViewId, inputAim };
-            NetworkingService.Instance.Instantiate("Ball", transform.position, Quaternion.identity, data).GetComponent<Ball>();
+            NetworkingService.Instance.Instantiate("Ball", throwPos, Quaternion.identity, data).GetComponent<Ball>();
         }
 
         public void ThrowBallLocal(BallType ballType)
