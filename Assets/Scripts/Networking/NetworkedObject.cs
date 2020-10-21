@@ -18,6 +18,9 @@ namespace Dyzalonius.Sugondese.Networking
         [SerializeField]
         private float maxPositionDesync = 1f;
 
+        [SerializeField]
+        private float maxLagForPositionInterpolationLagCompensation = 0.2f;
+
         public PhotonView PhotonView { get; private set; }
         public bool IsMine { get { return PhotonView.IsMine; } }
         public int ViewId { get { return PhotonView.ViewID; } }
@@ -72,9 +75,19 @@ namespace Dyzalonius.Sugondese.Networking
                     // Update networked position
                     networkPosition = receivedPosition;
 
-                    // Add lag compensation (prediction based on movement)
                     float lag = Mathf.Abs((float)(PhotonNetwork.Time - info.SentServerTime));
-                    networkPosition += (movement * lag);
+
+                    // Synchronize position if too desynced
+                    float distance = (transform.position - networkPosition).magnitude;
+                    if (distance > maxPositionDesync)
+                    {
+                        transform.position = networkPosition;
+                    }
+                    // Add lag compensation (prediction based on movement) if lag isn't insane
+                    else if (lag <= maxLagForPositionInterpolationLagCompensation)
+                    {
+                        networkPosition += (movement * lag);
+                    }
                     movement = networkPosition - transform.position;
                 }
                 else
@@ -83,6 +96,7 @@ namespace Dyzalonius.Sugondese.Networking
                     {
                         float lag = (float)(PhotonNetwork.Time - info.SentServerTime);
 
+                        // Synchronize position if too desynced
                         float distance = (transform.position - receivedPosition).magnitude;
                         if (distance > maxPositionDesync && Direction == receivedDirection)
                         {
