@@ -262,6 +262,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   movementSpeed: 15
+  throwBallFromBehindPlayer: 0
+  throwDistanceBehindPlayer: 1
   OnBallsChange:
     m_PersistentCalls:
       m_Calls:
